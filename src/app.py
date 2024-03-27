@@ -3,8 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+#import dash_core_components as dcc
+#import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 import plotly.express as px
 from dash_bootstrap_templates import load_figure_template
@@ -78,7 +80,8 @@ fighter_breakdown_wins = fighter_breakdown[fighter_breakdown['result'] == 1].val
 print("JONNY",fighter_breakdown_wins)
 
 # Create the Dash 
-app = dash.Dash(external_stylesheets=[dbc.themes.MORPH], suppress_callback_exceptions=True)
+app = dash.Dash(external_stylesheets=[dbc.themes.MORPH], suppress_callback_exceptions=True, assets_folder="static")
+server = app.server
 load_figure_template("MORPH")  # Load the template
 spinners = html.Div(
     [
