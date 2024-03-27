@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import dash
-#import dash_core_components as dcc
-#import dash_html_components as html
+
 from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
@@ -21,7 +20,7 @@ fighter_dropdown.sort()
 column_names = df.columns
 
 #drop specific columns from column_names
-column_names = column_names.drop(['fighter_url','opponent_url','stance','date','opponent','division','method','event_url','reach','height','age','referee'])
+column_names = column_names.drop(['fighter_url','opponent_url','stance','date','opponent','division','method','event_url','reach','height','age','referee',"fight_url", "fighter","dob","time", "time_format","total_comp_time"])
 
 #result == 1 means the fighter in the 'fighter' column won
 
@@ -61,26 +60,21 @@ for division, division_df in winners_grouped_by_division:
 
 #get the number of unique fighters in each division
 unique_fighters_per_division = df.groupby('division')['fighter'].nunique()
-print(unique_fighters_per_division)
-print("HERE", unique_fighters_per_division.index)
+
 filtered_index = [division for division in unique_fighters_per_division.index if 'Open Weight' and 'Catch Weight' not in division]
 
-print("DESIRED DIVISOMS", desired_divisions)
 reordered_index = unique_fighters_per_division.reindex(desired_divisions)
-print(desired_divisions)
-print("REORDERED", reordered_index.index)
 
 """
 show each fighter's win breakdown"""
 #show each fighter's win breakdown in a pie chart
 fighter_breakdown = df.loc[df['fighter'] == 'Max Holloway'].loc[:, ['result', 'method', 'age', 'total_strikes_landed', 'knockdowns']]
-print(fighter_breakdown)
 
 fighter_breakdown_wins = fighter_breakdown[fighter_breakdown['result'] == 1].value_counts()
-print("JONNY",fighter_breakdown_wins)
 
 # Create the Dash 
 app = dash.Dash(external_stylesheets=[dbc.themes.MORPH], suppress_callback_exceptions=True, assets_folder="static")
+#UNCOMMENT THIS BEFORE DEPLOYING, AND ALSO MOVE CSV FILE BACK INTO THE SRC FOLDER
 server = app.server
 load_figure_template("MORPH")  # Load the template
 spinners = html.Div(
@@ -120,11 +114,12 @@ carousel = dbc.Carousel(
     ],
     controls=False,
     indicators=False,
-    interval=2000,
+    interval=4000,
     ride="carousel",
     className="carousel-sm",  # Add this line to make the carousel smaller
+        style={'display': 'flex', 'justify-content': 'center'}
+
     #make carousel centered
-    style={'display': 'flex', 'justify-content': 'center'}
     
 )
 
@@ -137,8 +132,15 @@ app.layout = html.Div([
             html.Div([
                 html.H1("Welcome to the UFC Data Analysis Dashboard!", style={'textAlign': 'center'}),
                 html.P("This dashboard provides insights into the UFC fighters' performance and career statistics, as well as division finishes and fighter stance insights.", style={'textAlign': 'center'}),
-                html.P("Below are some examples of the data that can be visualized using this dashboard; click on the tabs above to explore the data further!", style={'textAlign': 'center'}),
-            ]),
+                 html.P("The data was gathered from Kaggle and contains thousands of entries starting from the first UFC event and going up to 2022.", style={'textAlign': 'center'}),
+#display the link to this: https://www.kaggle.com/datasets/danmcinerney/mma-differentials-and-elo
+
+
+  html.P([
+            "Below are some examples of the data that can be visualized using this dashboard; click on the tabs above to explore the data further! ",
+            html.A("Click here to access the dataset on Kaggle", href="https://www.kaggle.com/datasets/danmcinerney/mma-differentials-and-elo", className="kaggle")
+        ], style={'textAlign': 'center'}),
+    ], style={'textAlign': 'center'}),  # Center the content horizontally            ]),
             carousel
         ]),
         dcc.Tab(label='Fighter Win Stat Breakdown', value='tab-1'),
@@ -165,8 +167,12 @@ def render_content(tab):
                 options=fighter_dropdown, 
                 value='Conor McGregor'
             ),
-            dcc.Graph(id='pie-chart'),
-            dbc.RadioItems(
+ dbc.Spinner(
+                dcc.Graph(id='pie-chart'),
+                color="primary",
+                type="grow",
+            ),          
+ dbc.RadioItems(
                 id='radio-items',
                 options=[
                     {'label': 'Wins', 'value': 1},
@@ -188,7 +194,11 @@ def render_content(tab):
                 ],
                 value='Men'
             ),
-            dcc.Graph(id='bar-chart'),
+           dbc.Spinner(
+                dcc.Graph(id='bar-chart'),
+                color="primary",
+                type="grow",
+            ),
             dbc.RadioItems(
                 id='radio-method',
                options=[
@@ -222,7 +232,11 @@ def render_content(tab):
                 ],
                 value='Lightweight'
             ),
+             dbc.Spinner(
             dcc.Graph(id='stance-chart', style={'textAlign': 'center'}),
+                color="primary",
+                type="grow",
+            ),
             dbc.RadioItems(
                 id='radio-stance',
                      options=[
@@ -252,7 +266,11 @@ def render_content(tab):
             ],
                 value='Lightweight'
             ),
+            dbc.Spinner(
              dcc.Graph(id='correlation-graph'),
+                color="primary",
+                type="grow",
+            ),
         html.H2("Y-axis"),
         dbc.RadioItems(
             id='correlation-checklist-yaxis',
@@ -299,7 +317,11 @@ def render_content(tab):
                 options=column_names,
                 value='total_strikes_landed'
             ),
-            dcc.Graph(id='fighter-full-stats-graph')
+              dbc.Spinner(
+            dcc.Graph(id='fighter-full-stats-graph'),
+                color="primary",
+                type="grow",
+            ),
         ])
  
  
@@ -395,7 +417,7 @@ def update_stance_chart(selected_division, selected_stance):
         total_strikes_landed.append(total_strikes)
 
     #plot the grouped bar graph
-    fig = px.bar(x=stances, y=total_strikes_landed, title=f'Total {selected_stance} Landed by Stance in the {selected_division} Division', color=["Orthodox", "Southpaw", "Switch"], category_orders={"x": ["Orthodox", "Southpaw", "Switch"]}, labels={"x": "Stance", "y": f"Total {selected_stance} Landed"})
+    fig = px.bar(x=stances, y=total_strikes_landed, title=f'Total {selected_stance}  by Stance in the {selected_division} Division', color=["Orthodox", "Southpaw", "Switch"], category_orders={"x": ["Orthodox", "Southpaw", "Switch"]}, labels={"x": "Stance", "y": f"Total {selected_stance} Landed"})
     return fig
 
 @app.callback(
@@ -424,7 +446,12 @@ def update_correlation_graph(selected_division, selected_feature_x, selected_fea
 def update_fighter_stats_graph(fighter_name, fighter_stat_specification):
     # Filter the data for the selected fighter
     fighter_data = df.loc[df['fighter'] == fighter_name]
-
+    #if result is chosen for fighter_stat_specification, tell the user that result==1 means the fighter won and result==0 means the fighter lost
+  
+    if fighter_stat_specification == 'result':
+          fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name} (1 means the fighter won, 0 means the fighter lost')
+          return fig
+    
     # Create the line plot
     fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name}')
     return fig
