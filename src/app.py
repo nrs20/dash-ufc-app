@@ -38,7 +38,7 @@ division_filter = df[df['division'].isin(desired_divisions)]
 
 #getting the fighters who have won's name, stance, and division
 #basically the condition is the 'result'==1, then : gets all the rows, and ['fighter', 'stance', 'division'] gets the columns
-winners = df.loc[df['result'] == 1].loc[:, ['fighter', 'stance', 'division','method','total_strikes_landed', 'knockdowns', 'age', 'height', 'reach','head_strikes_landed','total_strikes_accuracy', 'sig_strikes_accuracy','head_strikes_accuracy', 'distance_strikes_landed','takedowns_landed', 'takedowns_def','total_strikes_def']]
+winners = df.loc[df['result'] == 1].loc[:, ['fighter', 'stance', 'division','method','total_strikes_landed', 'knockdowns', 'age', 'height', 'reach','head_strikes_landed','total_strikes_accuracy', 'sig_strikes_accuracy','head_strikes_accuracy', 'distance_strikes_landed','takedowns_landed','head_strikes_landed', 'takedowns_def','total_strikes_def','leg_strikes_landed','clinch_strikes_landed','body_strikes_landed','ground_strikes_landed']]
 
 losers = df.loc[df['result'] == 0].loc[:, ['fighter', 'stance', 'division']]
 
@@ -114,7 +114,7 @@ carousel = dbc.Carousel(
     ],
     controls=False,
     indicators=False,
-    interval=4000,
+    interval=3000,
     ride="carousel",
     className="carousel-sm",  # Add this line to make the carousel smaller
         style={'display': 'flex', 'justify-content': 'center'}
@@ -122,6 +122,51 @@ carousel = dbc.Carousel(
     #make carousel centered
     
 )
+
+accordion = html.Div(
+    [
+        dbc.Accordion(
+            [
+                dbc.AccordionItem(
+                    "Differentials, such as reach_differential, height_differential, etc. are calculated by dividing the two individual's technique stats. For example, if Conor hits Khabib 10 times, and Khabib hits Conor 5 times, then Conor's differential stat is 10/5 = 2. Khabib's differential stat is 0.5.",
+                    title="Differentials",
+                    item_id="item-1",
+                ),
+                dbc.AccordionItem(
+                    "Control is measured in seconds. If Khabib has 1 minute of control time in a fight, then his control stat is 60.",
+                    title="Control",
+                    item_id="item-2",
+                ),
+                dbc.AccordionItem(
+                    "Accuracy is measured in percentages. If Conor lands 10 strikes out of 20, then his accuracy stat is 50%.",
+                    title="Accuracy",
+                    item_id="item-3",
+                ),
+                 dbc.AccordionItem(
+                    "Precomp is a stat that measures the fighter's performance before the fight. For example, Jon Jones' precomp_avg_sig_strikes_landed would show his average stats for significant strikes landed before whichever fight you are observing.",
+                    title="Precomp",
+                    item_id="item-4",
+                )
+                 ,
+                  dbc.AccordionItem(
+                    "Result is a binary variable that shows whether the fighter won or lost the fight. 1 means the fighter won, 0 means the fighter lost.",
+                    title="Result",
+                    item_id="item-5",
+                ),
+                   dbc.AccordionItem(
+                    "Both height and reach are measured in inches.",
+                    title="Height & Reach",
+                    item_id="item-6",
+                )
+            ],
+            id="accordion",
+            active_item="item-1",
+        ),
+        html.Div(id="accordion-contents", className="mt-3"),
+    ]
+)
+
+
 
 
 
@@ -131,23 +176,24 @@ app.layout = html.Div([
         dcc.Tab(label="Welcome", value='tab-0', children=[
             html.Div([
                 html.H1("Welcome to the UFC Data Analysis Dashboard!", style={'textAlign': 'center'}),
-                html.P("This dashboard provides insights into the UFC fighters' performance and career statistics, as well as division finishes and fighter stance insights.", style={'textAlign': 'center'}),
+                html.P("This dashboard provides insights such as UFC fighters' performance & career statistics, division finishes, and fighter stances.", style={'textAlign': 'center'}),
                  html.P("The data was gathered from Kaggle and contains thousands of entries starting from the first UFC event and going up to 2022.", style={'textAlign': 'center'}),
 #display the link to this: https://www.kaggle.com/datasets/danmcinerney/mma-differentials-and-elo
 
 
   html.P([
             "Below are some examples of the data that can be visualized using this dashboard; click on the tabs above to explore the data further! ",
-            html.A("Click here to access the dataset on Kaggle", href="https://www.kaggle.com/datasets/danmcinerney/mma-differentials-and-elo", className="kaggle")
+            html.A("Click here to access the dataset on Kaggle.", href="https://www.kaggle.com/datasets/danmcinerney/mma-differentials-and-elo", className="kaggle")
         ], style={'textAlign': 'center'}),
     ], style={'textAlign': 'center'}),  # Center the content horizontally            ]),
             carousel
         ]),
         dcc.Tab(label='Fighter Win Stat Breakdown', value='tab-1'),
-        dcc.Tab(label='Division Finishes Breakdown', value='tab-2'),
+        dcc.Tab(label='Division Finishes Breakdown', value='tab-6'),
         dcc.Tab(label='Fighter Stance Breakdown', value='tab-3'),
         dcc.Tab(label='Correlation Breakdown', value='tab-4'),
         dcc.Tab(label='Fighter Career Stats', value='tab-5'),
+    dcc.Tab(label='About', value='tab-2', children=[html.Div([html.H1("Have a question about how a certain variable is calculated? Take a look below!")]) ,  accordion])
     ]),
     html.Div(id='tabs-content')
 ])
@@ -183,7 +229,7 @@ def render_content(tab):
 
             )
         ])
-    elif tab == 'tab-2':
+    elif tab == 'tab-6':
         return html.Div([
             html.H1("Division Finishes Breakdown", style={'textAlign': 'center'}),
             dcc.Dropdown(
@@ -240,12 +286,16 @@ def render_content(tab):
             dbc.RadioItems(
                 id='radio-stance',
                      options=[
-                    {'label': 'Total Strikes Landed', 'value': 'total_strikes_landed'},
+                {'label': 'Total Strikes Landed', 'value': 'total_strikes_landed'},
+                {'label': 'Body Strikes Landed', 'value': 'body_strikes_landed'},
+                {'label': 'Leg Strikes Landed', 'value': 'leg_strikes_landed'},
+                {'label': 'Clinch Strikes Landed', 'value': 'clinch_strikes_landed'},
+                {'label': 'Ground Strikes Landed', 'value': 'ground_strikes_landed'},
                 {'label': 'Knockdowns', 'value': 'knockdowns'},
                 {'label': 'Takedowns Landed', 'value': 'takedowns_landed'},
+                {'label': 'Takedowns Defended', 'value': 'takedowns_def'},
                 {'label': 'Distance Strikes Landed', 'value': 'distance_strikes_landed'},
-                {'label': 'Total Strikes Defended', 'value': 'total_strikes_def'},
-                ],
+                {'label': 'Total Strikes Defended', 'value': 'total_strikes_def'},],
                 value='knockdowns', inline=True,
             )
         ])
@@ -255,6 +305,9 @@ def render_content(tab):
             dcc.Dropdown(
                 id='correlation-dropdown',
                     options=[
+                         {'label': 'Women\'s Strawweight', 'value': 'Women\'s Strawweight'},
+                    {'label': 'Women\'s Flyweight', 'value': 'Women\'s Flyweight'},
+                    {'label': 'Women\'s Bantamweight', 'value': 'Women\'s Bantamweight'},
                 {'label': 'Flyweight', 'value': 'Flyweight'},
                 {'label': 'Bantamweight', 'value': 'Bantamweight'},
                 {'label': 'Featherweight', 'value': 'Featherweight'},
@@ -278,8 +331,18 @@ def render_content(tab):
                 {'label': 'Height', 'value': 'height'},
                 {'label': 'Reach', 'value': 'reach'},
                 {'label': 'Total Strikes Landed', 'value': 'total_strikes_landed'},
+                {'label': 'Total Strikes Accuracy', 'value': 'total_strikes_accuracy'},
+
+                {'label': 'Body Strikes Landed', 'value': 'body_strikes_landed'},
+                {'label': 'Leg Strikes Landed', 'value': 'leg_strikes_landed'},
+                {'label': 'Clinch Strikes Landed', 'value': 'clinch_strikes_landed'},
+                {'label': 'Ground Strikes Landed', 'value': 'ground_strikes_landed'},
+
+
                 {'label': 'Knockdowns', 'value': 'knockdowns'},
                 {'label': 'Takedowns Landed', 'value': 'takedowns_landed'},
+                {'label': 'Takedowns Defended', 'value': 'takedowns_def'},
+
                 {'label': 'Distance Strikes Landed', 'value': 'distance_strikes_landed'},
                 {'label': 'Total Strikes Defended', 'value': 'total_strikes_def'},
             ],
@@ -294,8 +357,18 @@ def render_content(tab):
                 {'label': 'Height', 'value': 'height'},
                 {'label': 'Reach', 'value': 'reach'},
                 {'label': 'Total Strikes Landed', 'value': 'total_strikes_landed'},
+                {'label': 'Total Strikes Accuracy', 'value': 'total_strikes_accuracy'},
+
+                {'label': 'Body Strikes Landed', 'value': 'body_strikes_landed'},
+                {'label': 'Leg Strikes Landed', 'value': 'leg_strikes_landed'},
+                {'label': 'Clinch Strikes Landed', 'value': 'clinch_strikes_landed'},
+                {'label': 'Ground Strikes Landed', 'value': 'ground_strikes_landed'},
+
+               
                 {'label': 'Knockdowns', 'value': 'knockdowns'},
                 {'label': 'Takedowns Landed', 'value': 'takedowns_landed'},
+                {'label': 'Takedowns Defended', 'value': 'takedowns_def'},
+
                 {'label': 'Distance Strikes Landed', 'value': 'distance_strikes_landed'},
                 {'label': 'Total Strikes Defended', 'value': 'total_strikes_def'},
             ],
@@ -323,6 +396,8 @@ def render_content(tab):
                 type="grow",
             ),
         ])
+    elif tab == 'tab-2':
+        return
  
  
 # Define the callback function, also listen for the change on radioItems
@@ -417,7 +492,7 @@ def update_stance_chart(selected_division, selected_stance):
         total_strikes_landed.append(total_strikes)
 
     #plot the grouped bar graph
-    fig = px.bar(x=stances, y=total_strikes_landed, title=f'Total {selected_stance}  by Stance in the {selected_division} Division', color=["Orthodox", "Southpaw", "Switch"], category_orders={"x": ["Orthodox", "Southpaw", "Switch"]}, labels={"x": "Stance", "y": f"Total {selected_stance} Landed"})
+    fig = px.bar(x=stances, y=total_strikes_landed, title=f' {selected_stance} by Stance in the {selected_division} Division', color=["Orthodox", "Southpaw", "Switch"], category_orders={"x": ["Orthodox", "Southpaw", "Switch"]}, labels={"x": "Stance", "y": f"{selected_stance}"})
     return fig
 
 @app.callback(
@@ -449,9 +524,17 @@ def update_fighter_stats_graph(fighter_name, fighter_stat_specification):
     #if result is chosen for fighter_stat_specification, tell the user that result==1 means the fighter won and result==0 means the fighter lost
   
     if fighter_stat_specification == 'result':
-          fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name} (1 means the fighter won, 0 means the fighter lost')
+          fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name} (1 means the fighter won, 0 means the fighter lost)')
           return fig
-    
+    if fighter_stat_specification == 'control':
+        fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} (in seconds) for {fighter_name}')
+        return fig
+    if 'accuracy' in fighter_stat_specification:
+        fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} (in percentages) for {fighter_name}')
+        return fig
+    if 'differential' in fighter_stat_specification:
+        fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name}')
+        return fig
     # Create the line plot
     fig = px.line(fighter_data, x='date', y=fighter_stat_specification, title=f'{fighter_stat_specification} for {fighter_name}')
     return fig
